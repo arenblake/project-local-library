@@ -7,22 +7,23 @@ function findBookById(books, id) {
 }
 
 function partitionBooksByBorrowedStatus(books) {
-  const borrowedStatus = [[], []];
-  books.forEach(book => book.borrows[0].returned ? 
-    borrowedStatus[1].push(book) : 
-    borrowedStatus[0].push(book));
-  return borrowedStatus;
+  return books.reduce((acc, book) => {
+    book.borrows[0].returned ? 
+    acc[1].push(book) : 
+    acc[0].push(book)
+    return acc
+  }, [[], []]);
 }
 
 function getBorrowersForBook(book, accounts) {
-  const borrowerIds = book.borrows.map(({id}) => id)
+  const userIds = book.borrows.map(({id}) => id)
     .slice(0, 10)
   const result = []
-  for (let id in borrowerIds) {
-    const borrower = accounts.find(account => 
-      account.id === borrowerIds[id])
-    borrower.returned = book.borrows.find(borrow => 
-      borrow.id === borrowerIds[id]).returned;
+  for (let userId in userIds) {
+    const borrower = accounts.find(({id}) => 
+      id === userIds[userId])
+    borrower.returned = book.borrows.find(({id}) => 
+      id === userIds[userId]).returned;
     result.push(borrower)
   }
   return result

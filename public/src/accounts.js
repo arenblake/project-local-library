@@ -1,28 +1,27 @@
-function findAccountById(accounts, id) {
-  return accounts.find(account => account.id === id)
+function findAccountById(accounts, givenId) {
+  return accounts.find(({id}) => id === givenId)
 }
 
 function sortAccountsByLastName(accounts) {
-  return accounts.sort((a,b) => 
-    a.name.last.toLowerCase() > b.name.last.toLowerCase() ? 1 : -1)
+  return accounts.sort(({name: {last: lastA}}, {name: {last: lastB}}) => 
+    lastA.toLowerCase() > lastB.toLowerCase() ? 1 : -1)
 }
 
-function getTotalNumberOfBorrows(account, books) {
-  return books.reduce((total, book) => {
-    return total + book.borrows.filter(borrow => borrow.id === account.id).length
+function getTotalNumberOfBorrows({id: userId}, books) {
+  return books.reduce((total, {borrows}) => {
+    return total + borrows.filter(({id}) => id === userId).length
   }, 0)
 }
 
-function getBooksPossessedByAccount(account, books, authors) {
-  const borrowedBooks = [];
-  books.forEach(book => {
-    if (book.borrows.find(borrow => borrow.id === account.id && !borrow.returned)) 
-      borrowedBooks.push(book);
-      borrowedBooks.forEach(book => {
-        book.author = authors.find(author => book.authorId === author.id)
-      })
-  })
-  return borrowedBooks
+function getBooksPossessedByAccount({id}, books, authors) {
+  return books.reduce((acc, book) => {
+    if (book.borrows[0].id === id) 
+      acc.push({
+        ...book,
+        author: authors.find(({id}) => book.authorId === id)
+      });
+    return acc
+  }, [])
 }
 
 module.exports = {

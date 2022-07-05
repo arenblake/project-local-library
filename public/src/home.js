@@ -7,73 +7,53 @@ function getTotalAccountsCount(accounts) {
 }
 
 function getBooksBorrowedCount(books) {
-  let count = 0;
-  books.forEach(book => {
-    if(!book.borrows[0].returned) count++})
-  return count
+  return books.reduce((acc, {borrows}) => {
+    if(!borrows[0].returned) acc++
+    return acc
+  }, 0)
 }
 
 function getMostCommonGenres(books) {
-  const count = []
-  const genres = books.map(book => book.genre)
-  genres.forEach(genre => {
-    if(!count.find(entry => entry.name === genre)) {
-      count.push({
-        name: genre,
-        count: 1})
-    } else {
-      let index = count.findIndex(entry => entry.name === genre)
-      count[index].count++
-    }
-  })
-  count.sort((a, b) => {
-    return b.count-a.count
-  })
-  return count.slice(0, 5)
+  return getTopFive(books.reduce((acc, {genre}) => {
+    !acc.find(({name}) => name === genre) ? 
+    acc.push({
+      name: genre,
+      count: 1
+    }) :
+    acc[acc.findIndex(({name}) => name === genre)].count++;
+    return acc
+  }, []))
 }
 
 function getMostPopularBooks(books) {
-  const popBooks = []
-  books.forEach(book => {
-    popBooks.push({
-      name: book.title,
-      count: book.borrows.length
+  return getTopFive(books.reduce((acc, {title, borrows}) => {
+    acc.push({
+      name: title,
+      count: borrows.length
     })
-  })
-  popBooks.sort((a, b) => {
-    return b.count-a.count
-  })
-  return popBooks.slice(0,5)
+    return acc
+  }, []))
 }
 
 function getMostPopularAuthors(books, authors) {
-  const popAuthors = []
+  return getTopFive(books.reduce((acc, {authorId, borrows}) => {
+    const {first, last} = authors.find(({id}) => id === authorId).name
+    const authorName = `${first} ${last}`
+    !acc.find(({name}) => name === authorName) ?
+    acc.push({
+      name: authorName,
+      count: borrows.length
+    }) :
+    acc[acc.findIndex(({name}) => name === authorName)].count += borrows.length
+    return acc
+  }, []))
+}
 
-  // Make helper functions
-  const popBooks = []
-  books.forEach(book => {
-    let authorName = authors.find(author => author.id === book.authorId).name
-    popBooks.push({
-      author: `${authorName.first} ${authorName.last}`,
-      borrows: book.borrows.length
-    })
+function getTopFive(arr) {
+  arr.sort((elementA, elementB) => {
+    return elementB.count - elementA.count;
   })
-
-  popBooks.forEach(book => {
-    if(!popAuthors.find(entry => entry.name === book.author)) {
-      popAuthors.push({
-        name: book.author,
-        count: book.borrows
-      })
-    } else {
-      let index = popAuthors.findIndex(entry => entry.name === book.author)
-      popAuthors[index].count += book.borrows
-    }
-  })
-  popAuthors.sort((a,b) => {
-    return b.count - a.count;
-  })
-  return popAuthors.slice(0, 5)
+  return arr.slice(0, 5)
 }
 
 module.exports = {
